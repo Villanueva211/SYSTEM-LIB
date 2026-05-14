@@ -24,14 +24,15 @@ export function AdminBooks({ books, setBooks }: Props) {
   const save = async () => {
     if (!form.title || !form.author) { toast.error('Title and author are required'); return; }
     setSaving(true);
+    const payload = { ...form, isbn: form.isbn.trim() || null };
     if (editBook) {
-      const { data, error } = await supabase.from('books').update({ ...form, updated_at: new Date().toISOString() }).eq('id', editBook.id).select().single();
-      if (error) { toast.error('Failed to update'); setSaving(false); return; }
+      const { data, error } = await supabase.from('books').update({ ...payload, updated_at: new Date().toISOString() }).eq('id', editBook.id).select().single();
+      if (error) { toast.error(error.message || 'Failed to update'); setSaving(false); return; }
       setBooks(p => p.map(b => b.id === editBook.id ? data : b));
       toast.success('Book updated!');
     } else {
-      const { data, error } = await supabase.from('books').insert([form]).select().single();
-      if (error) { toast.error('Failed to add book'); setSaving(false); return; }
+      const { data, error } = await supabase.from('books').insert([payload]).select().single();
+      if (error) { toast.error(error.message || 'Failed to add book'); setSaving(false); return; }
       setBooks(p => [data, ...p]);
       toast.success('Book added!');
     }
